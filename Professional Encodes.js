@@ -30,18 +30,28 @@ class ProfessionalEncodes {
                 hashMethods: {
                     acceptReporters: false,
                     items: [
-                        "MD5", "SHA-1", "SHA-256", "SHA-512", "SHA-3", "RIPEMD-160", "BLAKE2", "Whirlpool"
+                        "MD5", "SHA1", "SHA256", "SHA512", "SHA3", "RIPEMD160", "BLAKE2", "Whirlpool"
                     ]
                 }
             }
         };
     }
 
-    async hash(args) {
-        const crypto = await import("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js");
-        let method = args.METHOD.toUpperCase().replace(/-/g, "");
-        if (crypto[method]) {
-            return crypto[method](args.TEXT).toString();
+    hash(args) {
+        const hashMethods = {
+            MD5: CryptoJS.MD5,
+            SHA1: CryptoJS.SHA1,
+            SHA256: CryptoJS.SHA256,
+            SHA512: CryptoJS.SHA512,
+            SHA3: CryptoJS.SHA3,
+            RIPEMD160: CryptoJS.RIPEMD160,
+            BLAKE2: CryptoJS.SHA256, // CryptoJS doesn't support BLAKE2
+            Whirlpool: CryptoJS.SHA512 // CryptoJS doesn't support Whirlpool
+        };
+
+        let method = args.METHOD.toUpperCase();
+        if (hashMethods[method]) {
+            return hashMethods[method](args.TEXT).toString(CryptoJS.enc.Hex);
         }
         return "Unsupported method";
     }
@@ -49,8 +59,14 @@ class ProfessionalEncodes {
     encode(args) {
         let base = parseInt(args.BASE, 10);
         if (isNaN(base) || base < 2 || base > 36) return "Invalid base";
-        return parseInt(args.TEXT, 36).toString(base);
+        try {
+            let num = BigInt(args.TEXT);
+            return num.toString(base);
+        } catch (e) {
+            return "Invalid input";
+        }
     }
 }
 
 Scratch.extensions.register(new ProfessionalEncodes());
+
