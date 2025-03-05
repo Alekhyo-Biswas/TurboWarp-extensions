@@ -29,29 +29,26 @@ class ProfessionalEncodes {
             menus: {
                 hashMethods: {
                     acceptReporters: false,
-                    items: [
-                        "MD5", "SHA1", "SHA256", "SHA512", "SHA3", "RIPEMD160", "BLAKE2", "Whirlpool"
-                    ]
+                    items: ["MD5", "SHA1", "SHA256", "SHA512", "SHA3", "RIPEMD160"]
                 }
             }
         };
     }
 
-    hash(args) {
+    async hash(args) {
+        const crypto = await import("https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js");
         const hashMethods = {
-            MD5: CryptoJS.MD5,
-            SHA1: CryptoJS.SHA1,
-            SHA256: CryptoJS.SHA256,
-            SHA512: CryptoJS.SHA512,
-            SHA3: CryptoJS.SHA3,
-            RIPEMD160: CryptoJS.RIPEMD160,
-            BLAKE2: CryptoJS.SHA256, // CryptoJS doesn't support BLAKE2
-            Whirlpool: CryptoJS.SHA512 // CryptoJS doesn't support Whirlpool
+            MD5: crypto.MD5,
+            SHA1: crypto.SHA1,
+            SHA256: crypto.SHA256,
+            SHA512: crypto.SHA512,
+            SHA3: crypto.SHA3,
+            RIPEMD160: crypto.RIPEMD160
         };
 
         let method = args.METHOD.toUpperCase();
         if (hashMethods[method]) {
-            return hashMethods[method](args.TEXT).toString(CryptoJS.enc.Hex);
+            return hashMethods[method](args.TEXT).toString(crypto.enc.Hex);
         }
         return "Unsupported method";
     }
@@ -59,9 +56,10 @@ class ProfessionalEncodes {
     encode(args) {
         let base = parseInt(args.BASE, 10);
         if (isNaN(base) || base < 2 || base > 36) return "Invalid base";
+
         try {
-            let num = BigInt(args.TEXT);
-            return num.toString(base);
+            let encoded = Buffer.from(args.TEXT, "utf8").toString("base" + base);
+            return encoded;
         } catch (e) {
             return "Invalid input";
         }
@@ -69,4 +67,3 @@ class ProfessionalEncodes {
 }
 
 Scratch.extensions.register(new ProfessionalEncodes());
-
